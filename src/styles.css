@@ -430,9 +430,9 @@ body {
 .landing-hero-home {
   min-height: 86vh;
   background:
-    linear-gradient(90deg, rgba(6, 28, 56, 0.94) 0%, rgba(6, 28, 56, 0.9) 30%, rgba(6, 28, 56, 0.48) 58%, rgba(6, 28, 56, 0.2) 100%),
-    linear-gradient(180deg, rgba(7, 16, 28, 0.22), rgba(7, 16, 28, 0.18)),
-    url('./assets/apex-bank-hero.jpeg');
+    linear-gradient(90deg, rgba(5, 20, 38, 0.62) 0%, rgba(5, 20, 38, 0.48) 22%, rgba(5, 20, 38, 0.22) 46%, rgba(5, 20, 38, 0.08) 100%),
+    linear-gradient(180deg, rgba(7, 16, 28, 0.08), rgba(7, 16, 28, 0.12)),
+    url('./assets/apex-bank-hero-art.svg');
   background-position: center center;
   background-size: cover;
   background-repeat: no-repeat;
@@ -4530,6 +4530,11 @@ th {
     padding-bottom: 14px;
     gap: 16px;
     align-items: stretch;
+    padding: 16px;
+    border-radius: 24px;
+    background: linear-gradient(180deg, rgba(4, 16, 34, 0.88), rgba(4, 16, 34, 0.72));
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
   }
 
   .landing-nav-actions {
@@ -4597,13 +4602,14 @@ th {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 10px 16px;
     overflow: visible;
-    padding-bottom: 0;
+    padding: 8px 0 0;
   }
 
   .landing-link {
     width: 100%;
     justify-content: space-between;
     padding: 10px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
   }
 
   .landing-copy h1 {
@@ -4624,7 +4630,8 @@ th {
   }
 
   .landing-hero-home {
-    background-position: 68% center;
+    background-position: 74% center;
+    background-size: auto 100%;
   }
 
   .landing-feature-item {
@@ -4853,6 +4860,10 @@ th {
   .landing-links {
     grid-template-columns: 1fr;
     gap: 4px;
+  }
+
+  .landing-hero-home {
+    background-position: 77% center;
   }
 
   .landing-login-button {

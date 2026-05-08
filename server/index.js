@@ -738,7 +738,7 @@ async function sendWelcomeEmail({ name, email, accountNumber }) {
   };
 }
 
-async function sendTransferReceivedEmail({ name, email, amount, fromAccount, toAccount, transferDate }) {
+async function sendTransferReceivedEmail({ name, email, amount, fromAccount, toAccount, transferDate, verificationRequired = false }) {
   const mailer = await getMailClient();
   if (!mailer) {
     return {
@@ -747,13 +747,17 @@ async function sendTransferReceivedEmail({ name, email, amount, fromAccount, toA
       message: 'Email provider is not configured on the server.',
     };
   }
-  const subject = 'You have received a transfer';
+  const subject = verificationRequired ? 'Transfer received - verification required' : 'You have received a transfer';
   const text = [
     `Hello ${name},`,
     '',
-    `You have received a transfer of $${amount} to your account (${toAccount}).`,
+    verificationRequired
+      ? `A transfer of $${amount} has been sent to your account (${toAccount}), but the funds are on hold until your Apex Bank account is verified.`
+      : `You have received a transfer of $${amount} to your account (${toAccount}).`,
     fromAccount ? `From: ${fromAccount}` : '',
     transferDate ? `Date: ${transferDate}` : '',
+    '',
+    verificationRequired ? 'Please contact Apex Bank customer support to complete your verification so the transfer can be released.' : '',
     '',
     'If you have any questions, contact customer support.',
     '',
@@ -761,11 +765,14 @@ async function sendTransferReceivedEmail({ name, email, amount, fromAccount, toA
   ].filter(Boolean).join('\n');
   const html = `
     <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #0f172a;">
-      <h2 style="margin-bottom: 12px;">You have received a transfer</h2>
+      <h2 style="margin-bottom: 12px;">${verificationRequired ? 'Transfer received - verification required' : 'You have received a transfer'}</h2>
       <p>Hello ${name},</p>
-      <p>You have received a transfer of <strong>$${amount}</strong> to your account (<strong>${toAccount}</strong>).</p>
+      <p>${verificationRequired
+        ? `A transfer of <strong>$${amount}</strong> has been sent to your account (<strong>${toAccount}</strong>), but the funds are on hold until your Apex Bank account is verified.`
+        : `You have received a transfer of <strong>$${amount}</strong> to your account (<strong>${toAccount}</strong>).`}</p>
       ${fromAccount ? `<p><strong>From:</strong> ${fromAccount}</p>` : ''}
       ${transferDate ? `<p><strong>Date:</strong> ${transferDate}</p>` : ''}
+      ${verificationRequired ? '<p>Please contact Apex Bank customer support to complete your verification so the transfer can be released.</p>' : ''}
       <p>If you have any questions, contact customer support.</p>
       <p style="margin-top: 24px;">${BANK_NAME}</p>
     </div>
@@ -1267,7 +1274,7 @@ app.post('/api/emails/welcome', requireAuth, async (request, response) => {
 });
 
 app.post('/api/emails/transfer-received', requireAuth, async (request, response) => {
-  const { name, email, amount, fromAccount, toAccount, transferDate } = request.body ?? {};
+  const { name, email, amount, fromAccount, toAccount, transferDate, verificationRequired } = request.body ?? {};
 
   if (!name || !email || !amount || !toAccount) {
     response.status(400).json({ ok: false, message: 'Name, email, amount, and toAccount are required.' });
@@ -1306,6 +1313,7 @@ app.post('/api/emails/transfer-received', requireAuth, async (request, response)
       fromAccount,
       toAccount: matchedRecipient.accountNumber,
       transferDate,
+      verificationRequired: Boolean(verificationRequired),
     });
 
     if (!result.ok && result.configured === false) {

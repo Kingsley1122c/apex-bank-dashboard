@@ -1518,14 +1518,14 @@ async function requestWelcomeEmail({ name, email, accountNumber }) {
   }
 }
 
-async function requestTransferReceivedEmail({ name, email, amount, fromAccount, toAccount, transferDate }) {
+async function requestTransferReceivedEmail({ name, email, amount, fromAccount, toAccount, transferDate, verificationRequired = false }) {
   try {
     const response = await fetch(getTransferReceivedEmailApiUrl(), buildCredentialedRequest({
       method: 'POST',
       headers: buildAuthorizedHeaders('', {
         'Content-Type': 'application/json',
       }),
-      body: JSON.stringify({ name, email, amount, fromAccount, toAccount, transferDate }),
+      body: JSON.stringify({ name, email, amount, fromAccount, toAccount, transferDate, verificationRequired }),
     }));
 
     const payload = await response.json().catch(() => ({}));
@@ -3080,7 +3080,7 @@ function App() {
 
     let emailNotificationMessage = '';
 
-    if (apexRecipient && recipientVerified && apexRecipient.email) {
+    if (apexRecipient && apexRecipient.email) {
       const senderAccount = activeUser.accounts.find((entry) => entry.label === debitResult.sourceLabel);
       const senderAccountNumber = senderAccount?.accountNumber ?? activeUser.accountNumber ?? '';
       const emailResult = await requestTransferReceivedEmail({
@@ -3090,10 +3090,13 @@ function App() {
         fromAccount: senderAccountNumber,
         toAccount: apexRecipient.accountNumber,
         transferDate: new Date().toISOString(),
+        verificationRequired: !recipientVerified,
       });
 
       if (emailResult.ok) {
-        emailNotificationMessage = ` A transfer receipt email has been sent to ${apexRecipient.email}.`;
+        emailNotificationMessage = recipientVerified
+          ? ` A transfer receipt email has been sent to ${apexRecipient.email}.`
+          : ` A verification email has been sent to ${apexRecipient.email}.`;
       } else if (emailResult.configured === false) {
         emailNotificationMessage = ' The transfer completed, but recipient email delivery is not configured on the server yet.';
       } else {

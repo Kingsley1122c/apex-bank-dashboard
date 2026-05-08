@@ -1300,6 +1300,10 @@ function getWelcomeEmailApiUrl() {
   return `${getSharedApiBaseUrl()}/api/emails/welcome`;
 }
 
+function getTransferReceivedEmailApiUrl() {
+  return `${getSharedApiBaseUrl()}/api/emails/transfer-received`;
+}
+
 function getLoginApiUrl() {
   return `${getSharedApiBaseUrl()}/api/auth/login`;
 }
@@ -1504,6 +1508,40 @@ async function requestWelcomeEmail({ name, email, accountNumber }) {
       ok: true,
       configured: true,
       message: payload.message ?? `Welcome email sent to ${email}.`,
+    };
+  } catch {
+    return {
+      ok: false,
+      configured: false,
+      message: 'Email service is unavailable right now.',
+    };
+  }
+}
+
+async function requestTransferReceivedEmail({ name, email, amount, fromAccount, toAccount, transferDate }) {
+  try {
+    const response = await fetch(getTransferReceivedEmailApiUrl(), buildCredentialedRequest({
+      method: 'POST',
+      headers: buildAuthorizedHeaders('', {
+        'Content-Type': 'application/json',
+      }),
+      body: JSON.stringify({ name, email, amount, fromAccount, toAccount, transferDate }),
+    }));
+
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      return {
+        ok: false,
+        configured: payload.configured ?? true,
+        message: payload.message ?? 'Unable to send transfer received email right now.',
+      };
+    }
+
+    return {
+      ok: true,
+      configured: true,
+      message: payload.message ?? `Transfer received email sent to ${email}.`,
     };
   } catch {
     return {
@@ -2916,7 +2954,7 @@ function App() {
     return { ok: true, sourceLabel: selectedAccount.label };
   }
 
-  function handleSubmitTransfer(transferForm) {
+  async function handleSubmitTransfer(transferForm) {
     if (!activeUser || activeUser.role === 'admin') {
       return { ok: false, message: 'Transfers are only available for signed-in retail users.' };
     }
@@ -3040,13 +3078,36 @@ function App() {
       promoteToLiveFeed: amountValue >= 5000,
     });
 
+    let emailNotificationMessage = '';
+
+    if (apexRecipient && recipientVerified && apexRecipient.email) {
+      const senderAccount = activeUser.accounts.find((entry) => entry.label === debitResult.sourceLabel);
+      const senderAccountNumber = senderAccount?.accountNumber ?? activeUser.accountNumber ?? '';
+      const emailResult = await requestTransferReceivedEmail({
+        name: apexRecipient.name,
+        email: apexRecipient.email,
+        amount: Number(amountValue).toFixed(2),
+        fromAccount: senderAccountNumber,
+        toAccount: apexRecipient.accountNumber,
+        transferDate: new Date().toISOString(),
+      });
+
+      if (emailResult.ok) {
+        emailNotificationMessage = ` A transfer receipt email has been sent to ${apexRecipient.email}.`;
+      } else if (emailResult.configured === false) {
+        emailNotificationMessage = ' The transfer completed, but recipient email delivery is not configured on the server yet.';
+      } else {
+        emailNotificationMessage = ' The transfer completed, but the recipient email could not be sent right now.';
+      }
+    }
+
     return {
       ok: true,
       receipt,
       message:
         apexRecipient && !recipientVerified
           ? `${formatCurrency(amountValue)} was sent to ${resolvedRecipient}, but the funds are on hold until the recipient is verified by Apex Bank.`
-          : `${formatCurrency(amountValue)} sent to ${resolvedRecipient} from ${debitResult.sourceLabel}.`,
+          : `${formatCurrency(amountValue)} sent to ${resolvedRecipient} from ${debitResult.sourceLabel}.${emailNotificationMessage}`,
     };
   }
 

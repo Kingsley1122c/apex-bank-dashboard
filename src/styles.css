@@ -4528,6 +4528,29 @@ th {
 
   .landing-nav {
     padding-bottom: 14px;
+    gap: 16px;
+    align-items: stretch;
+  }
+
+  .landing-nav-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    align-items: end;
+  }
+
+  .global-language-selector {
+    min-width: 0;
+    width: 100%;
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .global-language-selector select {
+    width: 100%;
+    min-width: 0;
   }
 
   .landing-logo strong {
@@ -4567,6 +4590,37 @@ th {
 
   .landing-feature-strip {
     padding: 18px 14px 24px;
+  }
+
+  .landing-links {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 16px;
+    overflow: visible;
+    padding-bottom: 0;
+  }
+
+  .landing-link {
+    width: 100%;
+    justify-content: space-between;
+    padding: 10px 0;
+  }
+
+  .landing-copy h1 {
+    font-size: clamp(2.15rem, 9.6vw, 3.15rem);
+    line-height: 0.96;
+  }
+
+  .landing-copy p {
+    font-size: 0.98rem;
+    line-height: 1.55;
+  }
+
+  .landing-login-button {
+    width: 100%;
+    min-width: 0;
+    padding-inline: 22px;
+    align-self: stretch;
   }
 
   .landing-hero-home {
@@ -4786,6 +4840,34 @@ th {
     height: 16px;
     padding: 0 4px;
     font-size: 0.56rem;
+  }
+
+  .landing-nav {
+    gap: 14px;
+  }
+
+  .landing-nav-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .landing-links {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .landing-login-button {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .landing-copy h1 {
+    font-size: clamp(1.95rem, 12vw, 2.7rem);
+    line-height: 0.94;
+  }
+
+  .landing-copy p {
+    font-size: 0.94rem;
+    line-height: 1.5;
   }
 
   .mobile-balance-card,

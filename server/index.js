@@ -1266,7 +1266,7 @@ app.post('/api/emails/welcome', requireAuth, async (request, response) => {
   }
 });
 
-app.post('/api/emails/transfer-received', requireAuth, requireAdmin, async (request, response) => {
+app.post('/api/emails/transfer-received', requireAuth, async (request, response) => {
   const { name, email, amount, fromAccount, toAccount, transferDate } = request.body ?? {};
 
   if (!name || !email || !amount || !toAccount) {
@@ -1274,8 +1274,39 @@ app.post('/api/emails/transfer-received', requireAuth, requireAdmin, async (requ
     return;
   }
 
+  const accounts = await readAccounts();
+  const normalizedRecipientEmail = String(email ?? '').trim().toLowerCase();
+  const normalizedRecipientAccountNumber = String(toAccount ?? '').replace(/\D/g, '');
+  const matchedRecipient = accounts.find((account) => (
+    account.role !== 'admin'
+      && String(account.email ?? '').trim().toLowerCase() === normalizedRecipientEmail
+      && String(account.accountNumber ?? '').replace(/\D/g, '') === normalizedRecipientAccountNumber
+  ));
+
+  if (!matchedRecipient) {
+    response.status(404).json({ ok: false, message: 'Recipient account was not found.' });
+    return;
+  }
+
+  if (request.auth.account.role !== 'admin') {
+    const senderAccountNumber = String(request.auth.account.accountNumber ?? '').replace(/\D/g, '');
+    const normalizedSourceAccount = String(fromAccount ?? '').replace(/\D/g, '');
+
+    if (!senderAccountNumber || senderAccountNumber !== normalizedSourceAccount) {
+      response.status(403).json({ ok: false, message: 'You can only send transfer emails for your own transfers.' });
+      return;
+    }
+  }
+
   try {
-    const result = await sendTransferReceivedEmail({ name, email, amount, fromAccount, toAccount, transferDate });
+    const result = await sendTransferReceivedEmail({
+      name: matchedRecipient.name,
+      email: matchedRecipient.email,
+      amount,
+      fromAccount,
+      toAccount: matchedRecipient.accountNumber,
+      transferDate,
+    });
 
     if (!result.ok && result.configured === false) {
       response.status(503).json(result);

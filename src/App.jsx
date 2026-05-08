@@ -1877,6 +1877,7 @@ function App() {
   const [authSession, setAuthSession] = useState(loadStoredSession);
   const [accounts, setAccounts] = useState(loadAccounts);
   const [activeUserId, setActiveUserId] = useState(() => loadStoredSession()?.user?.id ?? '');
+  const [isSessionHydrating, setIsSessionHydrating] = useState(true);
   const [authMode, setAuthMode] = useState('login');
   const [publicPage, setPublicPage] = useState('home');
   const [selectedLanguage, setSelectedLanguage] = useState(() => {
@@ -2059,6 +2060,10 @@ function App() {
           setActiveUserId('');
           setMode('user');
           setPublicPage('home');
+        }
+      } finally {
+        if (!cancelled) {
+          setIsSessionHydrating(false);
         }
       }
     }
@@ -4253,21 +4258,43 @@ function App() {
         <div id="google_translate_element" className="google-translate-host" aria-hidden="true" />
         <div className="ambient ambient-left" />
         <div className="ambient ambient-right" />
-        <AuthScreen
-          authMode={authMode}
-          setAuthMode={setAuthMode}
-          authForm={authForm}
-          updateAuthField={updateAuthField}
-          handleLogin={handleLogin}
-          handleRegister={handleRegister}
-          authMessage={authMessage}
-          setAuthMessage={setAuthMessage}
-          publicPage={publicPage}
-          setPublicPage={setPublicPage}
-          onRunLoadingFlow={runLoadingFlow}
-          onResetDemoData={handleRestoreDemo}
-          languageSelector={languageSelector}
-        />
+        {!isSessionHydrating && (
+          <AuthScreen
+            authMode={authMode}
+            setAuthMode={setAuthMode}
+            authForm={authForm}
+            updateAuthField={updateAuthField}
+            handleLogin={handleLogin}
+            handleRegister={handleRegister}
+            authMessage={authMessage}
+            setAuthMessage={setAuthMessage}
+            publicPage={publicPage}
+            setPublicPage={setPublicPage}
+            onRunLoadingFlow={runLoadingFlow}
+            onResetDemoData={handleRestoreDemo}
+            languageSelector={languageSelector}
+          />
+        )}
+
+        {isSessionHydrating && (
+          <div className={`app-loading-backdrop tone-${loadingScreenContent.default.tone}`} role="status" aria-live="polite" aria-label={loadingScreenContent.default.title}>
+            <div className="app-loading-card glass-card">
+              <div className="app-loading-orbit" aria-hidden="true">
+                <span className="app-loading-ring" />
+                <span className="app-loading-ring app-loading-ring-delayed" />
+                <span className="app-loading-core">
+                  <span className="app-loading-icon">APX</span>
+                </span>
+              </div>
+              <p className="eyebrow">{loadingScreenContent.default.eyebrow}</p>
+              <h3>{loadingScreenContent.default.title}</h3>
+              <p>{loadingScreenContent.default.message}</p>
+              <div className="app-loading-progress" aria-hidden="true">
+                <span />
+              </div>
+            </div>
+          </div>
+        )}
 
         {renderLoadingOverlay()}
       </div>

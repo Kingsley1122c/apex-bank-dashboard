@@ -1,0 +1,160 @@
+{
+  "adminSection": "Overview",
+  "adminNotice": "Overview opened.",
+  "adminUserRecords": [
+    {
+      "accountId": "USR-0001",
+      "customerId": "CUS-2001",
+      "name": "Example User",
+      "email": "example.user@demo.local",
+      "phone": "+1 202 555 0101",
+      "segment": "Demo Client",
+      "balance": "$33,200.50",
+      "activity": "Moderate",
+      "kyc": "Verified",
+      "status": "Active",
+      "lastActivity": "Just now",
+      "riskScore": 18,
+      "kycLevel": "Verified Tier 2",
+      "transferLimit": "15000",
+      "cardLimit": "5000",
+      "accountNumber": "1102003004",
+      "verificationStatus": "Verified",
+      "dateOfBirth": "",
+      "gender": "",
+      "avatar": "EU",
+      "avatarImage": ""
+    }
+  ],
+  "adminWithdrawalRecords": [
+    {
+      "id": "WD-TEST-9002",
+      "amount": "$12.34",
+      "destination": "Demo Credit Union • **** 1101",
+      "requested": "May 06, 2026",
+      "status": "Approved",
+      "code": "APX-873589",
+      "requesterId": "USR-0001",
+      "requesterName": "Example User",
+      "supportMessage": "Sequential persistence validation request."
+    },
+    {
+      "id": "WD-5101",
+      "amount": "$350.00",
+      "destination": "Demo Credit Union • **** 1101",
+      "requested": "May 04, 2026",
+      "status": "Approved",
+      "code": "APX-903348",
+      "requesterId": "USR-0001",
+      "requesterName": "Example User",
+      "supportMessage": "Hello customer service, I need my withdrawal code for request WD-5101. Customer: Example User. Amount: $350.00. Destination bank: Demo Credit Union (**** 1101)."
+    }
+  ],
+  "adminCardRecords": [
+    {
+      "id": "VC-TEST-9002",
+      "type": "Virtual Card ATM Card",
+      "requested": "May 06, 2026",
+      "status": "Pending",
+      "requesterId": "USR-0001",
+      "requesterName": "Example User"
+    },
+    {
+      "id": "VC-510",
+      "type": "Virtual Card ATM Card",
+      "requested": "May 04, 2026",
+      "status": "Pending",
+      "requesterId": "USR-0001",
+      "requesterName": "Example User"
+    }
+  ],
+  "adminNotificationRecords": [
+    {
+      "id": "ANN-1778127324091",
+      "title": "Admin test announcement for Example User",
+      "audience": "All retail users",
+      "channel": "Push + Email",
+      "status": "Queued",
+      "createdAt": "2026-05-07T04:15:24.090Z"
+    },
+    {
+      "id": "ANN-DEMO-1001",
+      "title": "Workspace reset complete",
+      "audience": "Example User",
+      "channel": "Push + Email",
+      "status": "Queued",
+      "createdAt": "2026-05-04T09:00:00.000Z"
+    }
+  ],
+  "adminActivityRecords": [
+    "22:09 - Admin Control opened Overview.",
+    "22:00 - Example User opened support request CASE-TEST-9002.",
+    "22:00 - Example User opened card request VC-TEST-9002.",
+    "22:00 - Example User submitted withdrawal request WD-TEST-9002.",
+    "21:31 - Admin Control opened Withdrawal Requests.",
+    "21:23 - Admin Control opened Users Management.",
+    "21:21 - Admin Control updated Example User's profile details.",
+    "21:21 - Admin Control opened Example User's profile."
+  ],
+  "adminLiveEvents": [
+    "22:00 - Example User opened support request CASE-TEST-9002.",
+    "22:00 - Example User opened card request VC-TEST-9002.",
+    "22:00 - Example User submitted withdrawal request WD-TEST-9002.",
+    "21:15 - Admin Control queued a new announcement for All retail users.",
+    "09:40 - Protected admin session opened for Admin Control.",
+    "09:22 - Example User workspace refreshed after the reset."
+  ],
+  "adminTransactionRecords": [
+    {
+      "id": "TX-5101",
+      "name": "Demo Direct Deposit",
+      "type": "Income",
+      "amount": "+$4,200.00",
+      "date": "May 03, 2026",
+      "status": "Completed",
+      "owner": "Example User",
+      "reviewStatus": "Monitored",
+      "destination": "Apex Bank • **** 3004",
+      "note": "Protected demo funding event"
+    }
+  ],
+  "adminCaseRecords": [
+    {
+      "id": "CASE-TEST-9002",
+      "type": "Support",
+      "subject": "Sequential persistence validation",
+      "owner": "Example User",
+      "requesterId": "USR-0001",
+      "priority": "Low",
+      "status": "Open",
+      "assignee": "Support Desk",
+      "message": "Sequential persistence validation case."
+    },
+    {
+      "id": "CASE-510",
+      "type": "Support",
+      "subject": "Example User account review",
+      "owner": "Example User",
+      "requesterId": "USR-0001",
+      "priority": "Medium",
+      "status": "Open",
+      "assignee": "Support Desk",
+      "message": "Review the post-reset demo workspace configuration."
+    }
+  ],
+  "adminSettings": {
+    "alerts": true,
+    "biometricApproval": true,
+    "maintenanceMode": false,
+    "autoFreeze": true
+  },
+  "adminExportHistory": [
+    {
+      "id": "RPT-510",
+      "label": "Security Reset Report",
+      "createdAt": "May 04, 2026 09:45",
+      "status": "Ready"
+    }
+  ],
+  "selectedUser": "Example User"
+}

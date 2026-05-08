@@ -1,0 +1,94 @@
+[
+  {
+    "id": "USR-0001",
+    "role": "user",
+    "status": "Active",
+    "verificationStatus": "Verified",
+    "name": "Example User",
+    "email": "example.user@demo.local",
+    "phone": "+1 202 555 0101",
+    "segment": "Demo Client",
+    "avatar": "EU",
+    "accounts": [
+      {
+        "label": "Savings",
+        "amount": 25000
+      },
+      {
+        "label": "Current",
+        "amount": 8200.5
+      },
+      {
+        "label": "Business",
+        "amount": 0
+      }
+    ],
+    "savedBanks": [
+      {
+        "id": "BNK-1001",
+        "bankName": "Demo Credit Union",
+        "accountName": "Example User",
+        "accountNumber": "**** 1101"
+      }
+    ],
+    "notifications": [
+      {
+        "id": "ANN-1778127324091-USR-0001",
+        "type": "admin-announcement",
+        "title": "Admin message",
+        "message": "Admin test announcement for Example User",
+        "channel": "Push + Email",
+        "audience": "All retail users",
+        "createdAt": "2026-05-07T04:15:24.090Z",
+        "readAt": null
+      },
+      {
+        "id": "ANN-DEMO-1001-USR-0001",
+        "type": "admin-announcement",
+        "title": "Admin message",
+        "message": "The demo workspace was reset and protected with authenticated API access.",
+        "channel": "Push + Email",
+        "audience": "Example User",
+        "createdAt": "2026-05-04T09:00:00.000Z",
+        "readAt": null
+      }
+    ],
+    "pendingIncomingTransfers": [],
+    "accountNumber": "1102003004",
+    "routingNumber": "031100089",
+    "issuedCards": [
+      {
+        "id": "CARD-SEED-USR-0001",
+        "requestId": "CARD-SEED-USR-0001",
+        "type": "Physical Debit Card - Generated",
+        "cardMode": "Physical Card",
+        "status": "Active",
+        "requested": "Apr 05, 2026",
+        "issuedAt": "2026-04-05T09:30:00.000Z",
+        "network": "Mastercard World",
+        "maskedNumber": "**** 8842",
+        "issuedBy": "Apex Demo Seed"
+      }
+    ],
+    "password": "$2b$10$y/5aVIhIP2I/YARd.n6CIOt10AvZcv9DELaVf9yJfg1/O3WvtsoMe"
+  },
+  {
+    "id": "ADM-0001",
+    "role": "admin",
+    "status": "Active",
+    "verificationStatus": "Verified",
+    "name": "Admin Control",
+    "email": "admin@demo.local",
+    "phone": "+1 202 555 0199",
+    "segment": "Demo Admin",
+    "avatar": "AD",
+    "accounts": [],
+    "savedBanks": [],
+    "notifications": [],
+    "pendingIncomingTransfers": [],
+    "accountNumber": "",
+    "routingNumber": "",
+    "issuedCards": [],
+    "password": "$2b$10$6xAEO5wjzYbm5ua6R6lcK.fjT2CKyRe07TUSgrEYJlwVkfASR79Au"
+  }
+]

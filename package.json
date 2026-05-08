@@ -1,0 +1,28 @@
+{
+  "name": "apex-bank-dashboard",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "start": "node server/index.js",
+    "server": "node server/index.js",
+    "build": "vite build",
+    "preview": "vite preview",
+    "postinstall": "node scripts/fix-estree-flow.mjs"
+  },
+  "dependencies": {
+    "@sendgrid/mail": "^8.1.6",
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "nodemailer": "^8.0.5",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/estree": "^1.0.5",
+    "vite": "^5.4.10"
+  }
+}

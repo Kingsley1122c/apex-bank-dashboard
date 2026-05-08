@@ -1,0 +1,32 @@
+services:
+  - type: web
+    name: apex-bank-dashboard
+    env: node
+    plan: starter
+    buildCommand: npm install --include=dev && npm run build
+    startCommand: npm start
+    autoDeploy: true
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        sync: false
+      - key: SMTP_SECURE
+        sync: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: SENDGRID_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        value: Apex Bank <no-reply@example.com>
+      - key: VITE_API_BASE_URL
+        value: ""
+    disk:
+      name: apex-bank-data
+      mountPath: /opt/render/project/src/server/data
+      sizeGB: 1

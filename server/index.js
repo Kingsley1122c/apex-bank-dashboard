@@ -2,6 +2,7 @@ import 'dotenv/config';
 import bcrypt from 'bcryptjs';
 import express from 'express';
 import cors from 'cors';
+import { Pool } from 'pg';
 import { randomBytes } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
@@ -28,6 +29,104 @@ const DEFAULT_APEX_ROUTING_NUMBER = '031100089';
 const PASSWORD_HASH_ROUNDS = 10;
 let nodemailerPromise;
 let sendGridMailPromise;
+const databaseUrl = process.env.DATABASE_URL?.trim() || '';
+let databasePool;
+let databaseReadyPromise;
+
+function isDatabaseStorageEnabled() {
+  return Boolean(databaseUrl);
+}
+
+function getDatabasePool() {
+  if (!isDatabaseStorageEnabled()) {
+    return null;
+  }
+
+  if (!databasePool) {
+    const enableDatabaseSsl = String(process.env.DATABASE_SSL ?? '').trim().toLowerCase();
+
+    databasePool = new Pool({
+      connectionString: databaseUrl,
+      ssl: enableDatabaseSsl === 'true' || enableDatabaseSsl === 'require'
+        ? { rejectUnauthorized: false }
+        : undefined,
+    });
+  }
+
+  return databasePool;
+}
+
+async function ensureDatabaseStorage() {
+  if (!isDatabaseStorageEnabled()) {
+    return;
+  }
+
+  if (!databaseReadyPromise) {
+    databaseReadyPromise = (async () => {
+      const pool = getDatabasePool();
+
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS app_state (
+          key TEXT PRIMARY KEY,
+          value JSONB NOT NULL,
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )
+      `);
+
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS app_sessions (
+          token TEXT PRIMARY KEY,
+          data JSONB NOT NULL,
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+        )
+      `);
+
+      await pool.query(
+        'INSERT INTO app_state (key, value) VALUES ($1, $2::jsonb) ON CONFLICT (key) DO NOTHING',
+        ['accounts', JSON.stringify(defaultAccounts)],
+      );
+      await pool.query(
+        'INSERT INTO app_state (key, value) VALUES ($1, $2::jsonb) ON CONFLICT (key) DO NOTHING',
+        ['admin_workspace', JSON.stringify({})],
+      );
+    })().catch((error) => {
+      databaseReadyPromise = null;
+      throw error;
+    });
+  }
+
+  await databaseReadyPromise;
+}
+
+async function initializeStorage() {
+  if (isDatabaseStorageEnabled()) {
+    await ensureDatabaseStorage();
+    return;
+  }
+
+  await ensureAccountsFile();
+}
+
+async function readStateFromDatabase(key) {
+  await ensureDatabaseStorage();
+  const pool = getDatabasePool();
+  const result = await pool.query('SELECT value FROM app_state WHERE key = $1', [key]);
+  return result.rows[0]?.value;
+}
+
+async function writeStateToDatabase(key, value) {
+  await ensureDatabaseStorage();
+  const pool = getDatabasePool();
+  await pool.query(
+    `
+      INSERT INTO app_state (key, value, updated_at)
+      VALUES ($1, $2::jsonb, NOW())
+      ON CONFLICT (key)
+      DO UPDATE SET value = EXCLUDED.value, updated_at = NOW()
+    `,
+    [key, JSON.stringify(value)],
+  );
+}
 
 
 function getSeedIssuedCards(account) {
@@ -290,12 +389,63 @@ function serializeSessions() {
 }
 
 async function persistSessions() {
+  if (isDatabaseStorageEnabled()) {
+    await ensureDatabaseStorage();
+    const pool = getDatabasePool();
+
+    await pool.query('DELETE FROM app_sessions');
+
+    for (const [token, session] of sessions.entries()) {
+      await pool.query(
+        'INSERT INTO app_sessions (token, data, updated_at) VALUES ($1, $2::jsonb, NOW())',
+        [token, JSON.stringify(session)],
+      );
+    }
+
+    return;
+  }
+
   await ensureAccountsFile();
   await writeFile(sessionsFile, JSON.stringify(serializeSessions(), null, 2), 'utf8');
 }
 
 async function loadSessions() {
-  await ensureAccountsFile();
+  await initializeStorage();
+
+  if (isDatabaseStorageEnabled()) {
+    try {
+      const pool = getDatabasePool();
+      const result = await pool.query('SELECT token, data FROM app_sessions');
+      let changed = false;
+
+      sessions.clear();
+
+      for (const row of result.rows) {
+        const normalizedSession = normalizeStoredSession(row.data);
+
+        if (!normalizedSession || isSessionExpired(normalizedSession)) {
+          changed = true;
+          continue;
+        }
+
+        if (JSON.stringify(row.data) !== JSON.stringify(normalizedSession)) {
+          changed = true;
+        }
+
+        sessions.set(row.token, normalizedSession);
+      }
+
+      if (changed) {
+        await persistSessions();
+      }
+
+      return;
+    } catch {
+      sessions.clear();
+      await persistSessions();
+      return;
+    }
+  }
 
   try {
     const content = await readFile(sessionsFile, 'utf8');
@@ -651,6 +801,18 @@ async function getSendGridClient() {
 }
 
 async function getMailClient() {
+  const sendGridClient = await getSendGridClient();
+
+  if (sendGridClient) {
+    return {
+      from: sendGridClient.from,
+      send: (message) => sendGridClient.sgMail.send({
+        from: sendGridClient.from,
+        ...message,
+      }),
+    };
+  }
+
   const smtpConfig = getSmtpConfig();
 
   if (smtpConfig) {
@@ -677,18 +839,7 @@ async function getMailClient() {
     }
   }
 
-  const sendGridClient = await getSendGridClient();
-  if (!sendGridClient) {
-    return null;
-  }
-
-  return {
-    from: sendGridClient.from,
-    send: (message) => sendGridClient.sgMail.send({
-      from: sendGridClient.from,
-      ...message,
-    }),
-  };
+  return null;
 }
 
 async function sendWelcomeEmail({ name, email, accountNumber }) {
@@ -899,6 +1050,24 @@ async function ensureAccountsFile() {
 }
 
 async function readAccounts() {
+  if (isDatabaseStorageEnabled()) {
+    const parsed = await readStateFromDatabase('accounts');
+
+    if (Array.isArray(parsed)) {
+      const normalizedAccounts = parsed.map(normalizeStoredAccount);
+
+      if (JSON.stringify(parsed) !== JSON.stringify(normalizedAccounts)) {
+        await saveAccounts(normalizedAccounts);
+      }
+
+      return normalizedAccounts;
+    }
+
+    const normalizedDefaults = defaultAccounts.map(normalizeStoredAccount);
+    await saveAccounts(normalizedDefaults);
+    return normalizedDefaults;
+  }
+
   await ensureAccountsFile();
 
   try {
@@ -922,11 +1091,27 @@ async function readAccounts() {
 }
 
 async function saveAccounts(accounts) {
+  if (isDatabaseStorageEnabled()) {
+    await writeStateToDatabase('accounts', accounts);
+    return;
+  }
+
   await ensureAccountsFile();
   await writeFile(accountsFile, JSON.stringify(accounts, null, 2), 'utf8');
 }
 
 async function readAdminWorkspace() {
+  if (isDatabaseStorageEnabled()) {
+    const parsed = await readStateFromDatabase('admin_workspace');
+    const sanitizedWorkspace = sanitizeAdminWorkspace(parsed);
+
+    if (JSON.stringify(parsed ?? {}) !== JSON.stringify(sanitizedWorkspace)) {
+      await saveAdminWorkspace(sanitizedWorkspace);
+    }
+
+    return sanitizedWorkspace;
+  }
+
   await ensureAccountsFile();
 
   try {
@@ -945,6 +1130,11 @@ async function readAdminWorkspace() {
 }
 
 async function saveAdminWorkspace(workspace) {
+  if (isDatabaseStorageEnabled()) {
+    await writeStateToDatabase('admin_workspace', sanitizeAdminWorkspace(workspace));
+    return;
+  }
+
   await ensureAccountsFile();
   await writeFile(adminWorkspaceFile, JSON.stringify(sanitizeAdminWorkspace(workspace), null, 2), 'utf8');
 }
@@ -1396,7 +1586,7 @@ if (existsSync(distDir)) {
   });
 }
 
-Promise.all([ensureAccountsFile(), loadSessions()]).then(() => {
+Promise.all([initializeStorage(), loadSessions()]).then(() => {
   app.listen(port, host, () => {
     console.log(`${BANK_WORDMARK} app server running on http://${host}:${port}`);
   });

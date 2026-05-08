@@ -10,6 +10,10 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_SSL
+        sync: false
       - key: SMTP_HOST
         sync: false
       - key: SMTP_PORT

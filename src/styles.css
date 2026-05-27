@@ -4754,6 +4754,27 @@ th {
     width: 100%;
   }
 
+  .mobile-card-face .card-meta,
+  .cards-showcase-card .card-meta {
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: space-between;
+    width: 100%;
+  }
+
+  .mobile-card-face .card-meta > div,
+  .cards-showcase-card .card-meta > div {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+  }
+
+  .mobile-card-face .card-meta > div:last-child,
+  .cards-showcase-card .card-meta > div:last-child {
+    align-items: flex-end;
+    text-align: right;
+  }
+
   .filter-toolbar select,
   .chip,
   .primary-button,
